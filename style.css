@@ -1,0 +1,115 @@
+@font-face {
+    font-family: 'Arial Rounded';
+    src: url('assets/ArialRounded.TTF') format('truetype');
+}
+
+@font-face {
+    font-family: 'Snicker';
+    src: url('assets/Snicker.otf') format('opentype');
+}
+
+html {
+    box-sizing: border-box;
+}
+
+*, *::before, *::after {
+    box-sizing: inherit;
+    margin: 0;
+    padding: 0;
+}
+
+.title {
+    font-family: 'Snicker';
+    font-size: 16px;
+    -webkit-text-stroke: 3px #6B1D1F;
+    paint-order: stroke fill;
+    color: white;
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+progress {
+    border: solid 1.5px #6B1D1F;
+    width: 70%;
+    height: 8px;
+    position: absolute;
+    top: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+progress::-webkit-progress-bar {
+    background-color: #F8907A;
+}
+
+progress::-webkit-progress-value {
+    background-color: white;
+}
+
+.app {
+    width: 300px;
+    height: 510px;
+    background-image: url('assets/background.png');
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 50px 0px;
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+button {
+    font-family: 'Snicker';
+    font-size: 14px;
+    -webkit-text-stroke: 3px #6B1D1F;
+    paint-order: stroke fill;
+    color: white;
+    cursor: pointer;
+    background-color: #FDCE6E;
+    border: 3px solid #88C9FC;
+    border-radius: 20px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    width: 140px;
+}
+
+button.active,
+button:hover {
+    background-color: #F090BC;
+}
+
+.clock {
+    font-family: 'Arial Rounded';
+    font-size: 50px;
+    -webkit-text-stroke: 5px #910D19;
+    paint-order: stroke fill;
+    color: #F8907A;
+}
+
+.mama {
+    width: 130px;
+    position: absolute;
+    bottom: 0px;
+    right: 20px;
+}
+
+.hidden {
+    display: none;
+}
