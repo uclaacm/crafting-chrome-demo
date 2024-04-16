@@ -1,5 +1,5 @@
 const timer = {
-	pomodoro: 25,
+	pomodoro: 0.5,
 	shortBreak: 5,
 	longBreak: 15,
 	longBreakInterval: 4,
@@ -15,6 +15,9 @@ const longBreakButton = document.getElementById('long-break-btn');
 const shortBreakButton = document.getElementById('short-break-btn');
 mainButton.addEventListener('click', () => {
 	buttonSound.play();
+
+	chrome.action.setBadgeText({ text: 'ON' });
+
 	const { action } = mainButton.dataset;
 	if (action === 'start') {
 		startTimer();
@@ -46,10 +49,38 @@ function getRemainingTime(endTime) {
 }
 
 function startTimer() {
+	chrome.alarms.clearAll();
+
 	let { total } = timer.remainingTime;
 	const endTime = Date.parse(new Date()) + total * 1000;
 
 	if (timer.mode === 'pomodoro') timer.sessions++;
+
+	if (timer.mode === 'pomodoro') {
+		chrome.alarms.create({ delayInMinutes: timer.pomodoro });
+		chrome.storage.sync.set({
+			lastTimer: timer.pomodoro,
+			sessions: timer.sessions,
+			currentMin: 25,
+			currentSec: 0
+		});
+	} else if (timer.mode === 'shortBreak') {
+		chrome.alarms.create({ delayInMinutes: timer.shortBreak });
+		chrome.storage.sync.set({
+			lastTimer: timer.shortBreak,
+			sessions: timer.sessions,
+			currentMin: 5,
+			currentSec: 0
+		});
+	} else if (timer.mode === 'longBreak') {
+		chrome.alarms.create({ delayInMinutes: timer.longBreak });
+		chrome.storage.sync.set({
+			lastTimer: timer.longBreak,
+			sessions: timer.sessions,
+			currentMin: 15,
+			currentSec: 0
+		});
+	}
 
 	mainButton.dataset.action = 'stop';
 	mainButton.textContent = 'Stop';
@@ -89,6 +120,7 @@ function startTimer() {
 }
 
 function stopTimer() {
+	chrome.alarms.clearAll();
 	clearInterval(interval);
 	mainButton.dataset.action = 'start';
 	mainButton.textContent = 'Start';
@@ -99,6 +131,11 @@ function updateClock() {
 	const { remainingTime } = timer;
 	const minutes = `${remainingTime.minutes}`.padStart(2, '0');
 	const seconds = `${remainingTime.seconds}`.padStart(2, '0');
+
+	chrome.storage.sync.set({
+		currentMin: remainingTime.minutes,
+		currentSec: remainingTime.seconds
+	});
 
 	const min = document.getElementById('js-minutes');
 	const sec = document.getElementById('js-seconds');
@@ -114,6 +151,7 @@ function updateClock() {
 }
 
 function switchMode(mode) {
+	chrome.alarms.clearAll();
 	timer.mode = mode;
 	timer.remainingTime = {
 		total: timer[mode] * 60,
@@ -140,7 +178,21 @@ function handleMode(event) {
 	stopTimer();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+	// const { currentMin, currentSec } = await chrome.storage.sync.get([
+	//     'currentMin',
+	//     'currentSec'
+	// ]);
+
+	// if (currentMin !== undefined && currentSec !== undefined) {
+	//     timer.remainingTime = {
+	//         total: (currentMin * 60) + currentSec,
+	//         minutes: currentMin,
+	//         seconds: currentSec
+	//     };
+	//     updateClock();
+	// }
+
 	if ('Notification' in window) {
 		if (
 			Notification.permission !== 'granted' &&
