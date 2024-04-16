@@ -59,6 +59,7 @@ function startTimer() {
 	if (timer.mode === 'pomodoro') {
 		chrome.alarms.create({ delayInMinutes: timer.pomodoro });
 		chrome.storage.sync.set({
+            mode: 'pomodoro',
 			lastTimer: timer.pomodoro,
 			sessions: timer.sessions,
 			currentMin: 25,
@@ -67,6 +68,7 @@ function startTimer() {
 	} else if (timer.mode === 'shortBreak') {
 		chrome.alarms.create({ delayInMinutes: timer.shortBreak });
 		chrome.storage.sync.set({
+            mode: 'shortBreak',
 			lastTimer: timer.shortBreak,
 			sessions: timer.sessions,
 			currentMin: 5,
@@ -75,6 +77,7 @@ function startTimer() {
 	} else if (timer.mode === 'longBreak') {
 		chrome.alarms.create({ delayInMinutes: timer.longBreak });
 		chrome.storage.sync.set({
+            mode: 'longBreak',
 			lastTimer: timer.longBreak,
 			sessions: timer.sessions,
 			currentMin: 15,
@@ -108,7 +111,7 @@ function startTimer() {
 
 			if (Notification.permission === 'granted') {
 				const text =
-					timer.mode === 'pomodoro' ? 'Get back to work!' : 'Take a break!';
+					timer.mode === 'pomodoro' ? `Time to start cookin'!` : 'Take a break!';
 				new Notification(text);
 			}
 
@@ -128,6 +131,7 @@ function stopTimer() {
 }
 
 function updateClock() {
+    console.log(timer);
 	const { remainingTime } = timer;
 	const minutes = `${remainingTime.minutes}`.padStart(2, '0');
 	const seconds = `${remainingTime.seconds}`.padStart(2, '0');
@@ -143,11 +147,21 @@ function updateClock() {
 	sec.textContent = seconds;
 
 	const text =
-		timer.mode === 'pomodoro' ? 'Get back to work!' : 'Take a break!';
+		timer.mode === 'pomodoro' ? `Time to start cookin'!` : 'Take a break!';
 	document.title = `${minutes}:${seconds} — ${text}`;
 
 	const progress = document.getElementById('js-progress');
-	progress.value = timer[timer.mode] * 60 - timer.remainingTime.total;
+
+    if (timer.mode === undefined) {
+        chrome.storage.sync.get(['mode']).then((result) => {
+            timer.mode = result.mode;
+            progress.max = timer[timer.mode] * 60; 
+        });
+    }
+
+    if (timer.mode !== undefined) {
+        progress.value = timer[timer.mode] * 60 - timer.remainingTime.total;
+    }
 }
 
 function switchMode(mode) {
@@ -179,19 +193,20 @@ function handleMode(event) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-	// const { currentMin, currentSec } = await chrome.storage.sync.get([
-	//     'currentMin',
-	//     'currentSec'
-	// ]);
+	const { currentMin, currentSec } = await chrome.storage.sync.get([
+	    'currentMin',
+	    'currentSec'
+	]);
 
-	// if (currentMin !== undefined && currentSec !== undefined) {
-	//     timer.remainingTime = {
-	//         total: (currentMin * 60) + currentSec,
-	//         minutes: currentMin,
-	//         seconds: currentSec
-	//     };
-	//     updateClock();
-	// }
+	if (currentMin !== undefined && currentSec !== undefined) {
+	    timer.remainingTime = {
+	        total: (currentMin * 60) + currentSec,
+	        minutes: currentMin,
+	        seconds: currentSec
+	    };
+        updateClock();
+        startTimer();
+	}
 
 	if ('Notification' in window) {
 		if (
@@ -207,5 +222,5 @@ document.addEventListener('DOMContentLoaded', async () => {
 			});
 		}
 	}
-	switchMode('pomodoro');
+	// switchMode('pomodoro');
 });

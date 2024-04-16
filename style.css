@@ -18,10 +18,14 @@ html {
     padding: 0;
 }
 
+p {
+    font-family: 'Snicker';
+}
+
 .title {
     font-family: 'Snicker';
     font-size: 16px;
-    -webkit-text-stroke: 3px #6B1D1F;
+    -webkit-text-stroke: 4px #6B1D1F;
     paint-order: stroke fill;
     color: white;
     position: absolute;
@@ -77,17 +81,17 @@ progress::-webkit-progress-value {
 
 button {
     font-family: 'Snicker';
-    font-size: 14px;
-    -webkit-text-stroke: 3px #6B1D1F;
+    font-size: 13px;
+    -webkit-text-stroke: 4px #6B1D1F;
     paint-order: stroke fill;
     color: white;
     cursor: pointer;
     background-color: #FDCE6E;
-    border: 3px solid #88C9FC;
+    border: 4px solid #88C9FC;
     border-radius: 20px;
     padding-top: 8px;
     padding-bottom: 8px;
-    width: 140px;
+    width: 150px;
 }
 
 button.active,
