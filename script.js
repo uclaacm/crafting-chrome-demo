@@ -117,6 +117,13 @@ function startTimer() {
 
 			document.querySelector(`[data-sound="${timer.mode}"]`).play();
 
+            if (timer.mode === 'shortBreak' || timer.mode === 'longBreak') {
+                const audioNames = ['great', 'terrific', 'wedidit'];
+                const randomIndex = Math.floor(Math.random() * 3);
+                const randomAudio = audioNames[randomIndex];
+                document.querySelector(`[extra-sound="${randomAudio}"]`).play();
+            }
+
 			startTimer();
 		}
 	}, 1000);
@@ -131,7 +138,6 @@ function stopTimer() {
 }
 
 function updateClock() {
-    console.log(timer);
 	const { remainingTime } = timer;
 	const minutes = `${remainingTime.minutes}`.padStart(2, '0');
 	const seconds = `${remainingTime.seconds}`.padStart(2, '0');
