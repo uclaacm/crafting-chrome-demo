@@ -1,43 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-        <title>CraftingChrome</title>
-        <link rel="stylesheet" href="style.css" />
-    </head>
-    <body>
-        <main class="app">
-            <div class="title"> Cooking Clock</div>
-            <progress id="js-progress" value="0"></progress>
-            <div class="progress-bar"></div>
-            <div class="container">
-                <div class="button-container" id="mode-buttons">
-                    <button data-mode="pomodoro">
-                        Pomodoro
-                    </button>
-                    <button data-mode="shortBreak">
-                        Short Break
-                    </button>
-                    <button data-mode="longBreak">
-                        Long Break
-                    </button>
-                </div>
-                <div class="clock">
-                    <span id="js-minutes">25</span><span>:</span><span id="js-seconds">00</span>
-                </div>
-                <button data-action="start" id="js-btn">
-                    Start
-                </button>
-            </div>
-            <img class="mama" src="assets/mama.png" />
-        </main>
-        <div class="hidden">
-        <audio src="assets/backtowork.mp3" data-sound="pomodoro"></audio>
-        <audio src="assets/break.mp3" data-sound="shortBreak"></audio>
-        <audio src="assets/break.mp3" data-sound="longBreak"></audio>
-        </div>
-        <script src="script.js"></script>
-    </body>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+		<title>CraftingChrome</title>
+		<link rel="stylesheet" href="style.css" />
+	</head>
+	<body>
+		<main class="app">
+			<div class="title">Cooking Clock</div>
+			<progress id="js-progress" value="0"></progress>
+			<div class="progress-bar"></div>
+			<div class="container">
+				<div class="button-container" id="mode-buttons">
+					<button data-mode="pomodoro" id="pomodoro-btn">Pomodoro</button>
+					<button data-mode="shortBreak" id="short-break-btn">
+						Short Break
+					</button>
+					<button data-mode="longBreak" id="long-break-btn">Long Break</button>
+				</div>
+				<div class="clock">
+					<span id="js-minutes">25</span><span>:</span
+					><span id="js-seconds">00</span>
+				</div>
+				<button data-action="start" id="start-btn">Start</button>
+			</div>
+			<img class="mama" src="assets/mama.png" />
+		</main>
+		<div class="hidden">
+			<audio src="assets/backtowork.mp3" data-sound="pomodoro"></audio>
+			<audio src="assets/break.mp3" data-sound="shortBreak"></audio>
+			<audio src="assets/break.mp3" data-sound="longBreak"></audio>
+		</div>
+		<script src="script.js"></script>
+	</body>
 </html>
