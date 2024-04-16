@@ -12,7 +12,14 @@
 	"background": {
 		"service_worker": "background.js"
 	},
-	"permissions": ["activeTab", "alarms", "notifications", "storage"],
+	"permissions": [
+		"activeTab",
+		"alarms",
+		"notifications",
+		"storage",
+		"tabs",
+		"scripting"
+	],
 	"icons": {
 		"128": "assets/icon.png"
 	}

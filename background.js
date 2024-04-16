@@ -1,3 +1,13 @@
+// chrome.runtime.onInstalled.addListener(() => {
+// 	chrome.action.setBadgeText({
+// 		text: 'OFF'
+// 	});
+// });
+
+// chrome.action.onClicked.addListener(async () => {
+// 	chrome.action.setBadgeText({ text: 'ON' });
+// });
+
 chrome.alarms.onAlarm.addListener(() => {
 	chrome.action.setBadgeText({ text: '' });
 	chrome.notifications.create({

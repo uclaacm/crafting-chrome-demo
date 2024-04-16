@@ -1,232 +1,160 @@
-const timer = {
-	pomodoro: 0.5,
-	shortBreak: 5,
-	longBreak: 15,
-	longBreakInterval: 4,
-	sessions: 0
-};
+function getAlarm() {
+	return new Promise((resolve, reject) => {
+		chrome.alarms.get(timer.current, (alarm) => {
+			if (alarm) {
+				resolve(alarm);
+			} else {
+				reject('Alarm not found!');
+			}
+		});
+	});
+}
 
-let interval;
+// Function to calculate remaining time until the alarm goes off
+function calculateRemainingTime(alarmInfo) {
+	const currentTimestamp = Date.now();
+	const alarmTimestamp = alarmInfo.scheduledTime;
+	const delayInMilliseconds = alarmTimestamp - currentTimestamp;
+	const remainingMinutes = Math.floor(delayInMilliseconds / (1000 * 60)); // Convert milliseconds to minutes and round down
+	const remainingSeconds = Math.floor(
+		(delayInMilliseconds % (1000 * 60)) / 1000
+	); // Convert remaining milliseconds to seconds and round down
+	return { minutes: remainingMinutes, seconds: remainingSeconds };
+}
+
+// Function to log remaining time until the alarm goes off
+async function logRemainingTime() {
+	try {
+		const alarm = await getAlarm();
+		const { minutes, seconds } = calculateRemainingTime(alarm);
+		console.log(
+			'Remaining time until alarm goes off:',
+			minutes,
+			'minutes',
+			seconds,
+			'seconds'
+		);
+		return { minutes, seconds };
+	} catch (error) {
+		return null;
+	}
+}
+
+async function updateHTMLClock() {
+	let cur = await logRemainingTime();
+	const minHTML = document.getElementById('js-minutes');
+	const secHTML = document.getElementById('js-seconds');
+
+	if (cur) {
+		let { minutes, seconds } = cur;
+		if (minutes !== null && seconds !== null) {
+			minHTML.textContent = `${minutes}`.padStart(2, '0');
+			secHTML.textContent = `${seconds}`.padStart(2, '0');
+		}
+	} else {
+		minHTML.textContent = `${timer[timer.current]}`.padStart(2, '0');
+		secHTML.textContent = '00';
+	}
+}
+
+function switchMode(mode) {
+	timer.current = mode;
+
+	pomodoroButton.classList.remove('active');
+	longBreakButton.classList.remove('active');
+	shortBreakButton.classList.remove('active');
+
+	if (mode === 'pomodoro') {
+		pomodoroButton.classList.add('active');
+	} else if (mode === 'longBreak') {
+		longBreakButton.classList.add('active');
+	} else if (mode === 'shortBreak') {
+		shortBreakButton.classList.add('active');
+	}
+}
+
+async function getMode() {
+	const mode = await chrome.storage.local.get('currentMode');
+	if (mode) {
+		timer.current = mode.currentMode;
+	}
+}
+
+async function initializeAlarmValues() {
+	try {
+		await getMode();
+		const alarm = await getAlarm();
+		if (alarm) {
+			console.log('alarm');
+			mainButton.classList.add('active');
+			mainButton.textContent = 'Stop';
+			mainButton.dataset.action = 'stop';
+
+			currentMode = alarm.name;
+			switchMode(currentMode);
+		} else {
+			switchMode('pomodoro');
+		}
+	} catch (error) {
+		// No alarm found
+		switchMode('pomodoro');
+		return;
+	}
+}
 
 const buttonSound = new Audio('./assets/button-sound.mp3');
 const mainButton = document.getElementById('start-btn');
 const pomodoroButton = document.getElementById('pomodoro-btn');
 const longBreakButton = document.getElementById('long-break-btn');
 const shortBreakButton = document.getElementById('short-break-btn');
-mainButton.addEventListener('click', () => {
+
+// Initialize Values
+let timer = {
+	pomodoro: 25,
+	shortBreak: 5,
+	longBreak: 15,
+	// longBreakInterval: 4,
+	current: 'pomodoro'
+};
+initializeAlarmValues();
+
+// Call updateHTMLClock every second
+updateHTMLClock();
+setInterval(updateHTMLClock, 1000);
+
+mainButton.addEventListener('click', async () => {
+	const { action } = mainButton.dataset;
 	buttonSound.play();
 
-	chrome.action.setBadgeText({ text: 'ON' });
-
-	const { action } = mainButton.dataset;
-	if (action === 'start') {
-		startTimer();
+	if (action === 'stop') {
+		chrome.alarms.clear(timer.current);
+		mainButton.classList.remove('active');
+		mainButton.textContent = 'Start';
+		mainButton.dataset.action = 'start';
 	} else {
-		stopTimer();
+		chrome.alarms.create(timer.current, {
+			delayInMinutes: timer[timer.current]
+		});
+		mainButton.classList.add('active');
+		mainButton.textContent = 'Stop';
+		mainButton.dataset.action = 'stop';
+		chrome.storage.local.set({ currentMode: timer.current }).then(() => {
+			console.log('Mode set to ' + timer.current);
+		});
 	}
 });
+
 pomodoroButton.addEventListener('click', () => {
 	buttonSound.play();
+	switchMode('pomodoro');
 });
+
 longBreakButton.addEventListener('click', () => {
 	buttonSound.play();
+	switchMode('longBreak');
 });
+
 shortBreakButton.addEventListener('click', () => {
 	buttonSound.play();
-});
-
-const modeButtons = document.querySelector('#mode-buttons');
-modeButtons.addEventListener('click', handleMode);
-
-function getRemainingTime(endTime) {
-	const currentTime = Date.parse(new Date());
-	const difference = endTime - currentTime;
-	const total = Number.parseInt(difference / 1000, 10);
-	const minutes = Number.parseInt((total / 60) % 60, 10);
-	const seconds = Number.parseInt(total % 60, 10);
-
-	return { total, minutes, seconds };
-}
-
-function startTimer() {
-	chrome.alarms.clearAll();
-
-	let { total } = timer.remainingTime;
-	const endTime = Date.parse(new Date()) + total * 1000;
-
-	if (timer.mode === 'pomodoro') timer.sessions++;
-
-	if (timer.mode === 'pomodoro') {
-		chrome.alarms.create({ delayInMinutes: timer.pomodoro });
-		chrome.storage.sync.set({
-            mode: 'pomodoro',
-			lastTimer: timer.pomodoro,
-			sessions: timer.sessions,
-			currentMin: 25,
-			currentSec: 0
-		});
-	} else if (timer.mode === 'shortBreak') {
-		chrome.alarms.create({ delayInMinutes: timer.shortBreak });
-		chrome.storage.sync.set({
-            mode: 'shortBreak',
-			lastTimer: timer.shortBreak,
-			sessions: timer.sessions,
-			currentMin: 5,
-			currentSec: 0
-		});
-	} else if (timer.mode === 'longBreak') {
-		chrome.alarms.create({ delayInMinutes: timer.longBreak });
-		chrome.storage.sync.set({
-            mode: 'longBreak',
-			lastTimer: timer.longBreak,
-			sessions: timer.sessions,
-			currentMin: 15,
-			currentSec: 0
-		});
-	}
-
-	mainButton.dataset.action = 'stop';
-	mainButton.textContent = 'Stop';
-	mainButton.classList.add('active');
-
-	interval = setInterval(function () {
-		timer.remainingTime = getRemainingTime(endTime);
-		updateClock();
-
-		total = timer.remainingTime.total;
-		if (total <= 0) {
-			clearInterval(interval);
-
-			switch (timer.mode) {
-				case 'pomodoro':
-					if (timer.sessions % timer.longBreakInterval === 0) {
-						switchMode('longBreak');
-					} else {
-						switchMode('shortBreak');
-					}
-					break;
-				default:
-					switchMode('pomodoro');
-			}
-
-			if (Notification.permission === 'granted') {
-				const text =
-					timer.mode === 'pomodoro' ? `Time to start cookin'!` : 'Take a break!';
-				new Notification(text);
-			}
-
-			document.querySelector(`[data-sound="${timer.mode}"]`).play();
-
-            if (timer.mode === 'shortBreak' || timer.mode === 'longBreak') {
-                const audioNames = ['great', 'terrific', 'wedidit'];
-                const randomIndex = Math.floor(Math.random() * 3);
-                const randomAudio = audioNames[randomIndex];
-                document.querySelector(`[extra-sound="${randomAudio}"]`).play();
-            }
-
-			startTimer();
-		}
-	}, 1000);
-}
-
-function stopTimer() {
-	chrome.alarms.clearAll();
-	clearInterval(interval);
-	mainButton.dataset.action = 'start';
-	mainButton.textContent = 'Start';
-	mainButton.classList.remove('active');
-}
-
-function updateClock() {
-	const { remainingTime } = timer;
-	const minutes = `${remainingTime.minutes}`.padStart(2, '0');
-	const seconds = `${remainingTime.seconds}`.padStart(2, '0');
-
-	chrome.storage.sync.set({
-		currentMin: remainingTime.minutes,
-		currentSec: remainingTime.seconds
-	});
-
-	const min = document.getElementById('js-minutes');
-	const sec = document.getElementById('js-seconds');
-	min.textContent = minutes;
-	sec.textContent = seconds;
-
-	const text =
-		timer.mode === 'pomodoro' ? `Time to start cookin'!` : 'Take a break!';
-	document.title = `${minutes}:${seconds} — ${text}`;
-
-	const progress = document.getElementById('js-progress');
-
-    if (timer.mode === undefined) {
-        chrome.storage.sync.get(['mode']).then((result) => {
-            timer.mode = result.mode;
-            progress.max = timer[timer.mode] * 60; 
-        });
-    }
-
-    if (timer.mode !== undefined) {
-        progress.value = timer[timer.mode] * 60 - timer.remainingTime.total;
-    }
-}
-
-function switchMode(mode) {
-	chrome.alarms.clearAll();
-	timer.mode = mode;
-	timer.remainingTime = {
-		total: timer[mode] * 60,
-		minutes: timer[mode],
-		seconds: 0
-	};
-
-	document
-		.querySelectorAll('button[data-mode]')
-		.forEach((e) => e.classList.remove('active'));
-	document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
-	document.body.style.backgroundColor = `var(--${mode})`;
-	document
-		.getElementById('js-progress')
-		.setAttribute('max', timer.remainingTime.total);
-
-	updateClock();
-}
-
-function handleMode(event) {
-	const { mode } = event.target.dataset;
-	if (!mode) return;
-	switchMode(mode);
-	stopTimer();
-}
-
-document.addEventListener('DOMContentLoaded', async () => {
-	const { currentMin, currentSec } = await chrome.storage.sync.get([
-	    'currentMin',
-	    'currentSec'
-	]);
-
-	if (currentMin !== undefined && currentSec !== undefined) {
-	    timer.remainingTime = {
-	        total: (currentMin * 60) + currentSec,
-	        minutes: currentMin,
-	        seconds: currentSec
-	    };
-        updateClock();
-        startTimer();
-	}
-
-	if ('Notification' in window) {
-		if (
-			Notification.permission !== 'granted' &&
-			Notification.permission !== 'denied'
-		) {
-			Notification.requestPermission().then(function (permission) {
-				if (permission === 'granted') {
-					new Notification(
-						'Awesome! You will be notified at the start of each session'
-					);
-				}
-			});
-		}
-	}
-	// switchMode('pomodoro');
+	switchMode('shortBreak');
 });
