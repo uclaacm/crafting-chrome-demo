@@ -87,8 +87,8 @@ async function initializeAlarmValues() {
 		if (alarm) {
 			console.log('alarm');
 			mainButton.classList.add('active');
-			mainButton.textContent = 'Stop';
-			mainButton.dataset.action = 'stop';
+			mainButton.textContent = 'Reset';
+			mainButton.dataset.action = 'reset';
 
 			currentMode = alarm.name;
 			switchMode(currentMode);
@@ -126,7 +126,7 @@ mainButton.addEventListener('click', async () => {
 	const { action } = mainButton.dataset;
 	buttonSound.play();
 
-	if (action === 'stop') {
+	if (action === 'reset') {
 		chrome.alarms.clear(timer.current);
 		mainButton.classList.remove('active');
 		mainButton.textContent = 'Start';
@@ -136,8 +136,8 @@ mainButton.addEventListener('click', async () => {
 			delayInMinutes: timer[timer.current]
 		});
 		mainButton.classList.add('active');
-		mainButton.textContent = 'Stop';
-		mainButton.dataset.action = 'stop';
+		mainButton.textContent = 'Reset';
+		mainButton.dataset.action = 'reset';
 		chrome.storage.local.set({ currentMode: timer.current }).then(() => {
 			console.log('Mode set to ' + timer.current);
 		});

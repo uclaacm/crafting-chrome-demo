@@ -23,33 +23,11 @@ p {
 }
 
 .title {
-    font-family: 'Snicker';
-    font-size: 16px;
-    -webkit-text-stroke: 4px #6B1D1F;
-    paint-order: stroke fill;
-    color: white;
+    width: 100px;
     position: absolute;
-    top: 60px;
+    top: 50px;
     left: 50%;
     transform: translateX(-50%);
-}
-
-progress {
-    border: solid 1.5px #6B1D1F;
-    width: 70%;
-    height: 8px;
-    position: absolute;
-    top: 90px;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-progress::-webkit-progress-bar {
-    background-color: #F8907A;
-}
-
-progress::-webkit-progress-value {
-    background-color: white;
 }
 
 .app {
@@ -66,7 +44,7 @@ progress::-webkit-progress-value {
     gap: 10px;
     padding: 50px 0px;
     position: absolute;
-    top: 60px;
+    top: 50px;
     left: 50%;
     transform: translateX(-50%);
 }
