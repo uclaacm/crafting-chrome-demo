@@ -92,8 +92,8 @@ async function initializeAlarmValues() {
 		// Alarm exists: set elements and mode
 		if (alarm) {
 			mainButton.classList.add('active');
-			mainButton.textContent = 'Stop';
-			mainButton.dataset.action = 'stop';
+			mainButton.textContent = 'Reset';
+			mainButton.dataset.action = 'reset';
 
 			currentMode = alarm.name;
 			switchMode(currentMode);
@@ -135,7 +135,7 @@ mainButton.addEventListener('click', async () => {
 	const { action } = mainButton.dataset;
 	buttonSound.play();
 
-	if (action === 'stop') {
+	if (action === 'reset') {
 		chrome.alarms.clear(timer.current);
 		mainButton.classList.remove('active');
 		mainButton.textContent = 'Start';
@@ -146,11 +146,16 @@ mainButton.addEventListener('click', async () => {
 		});
 
 		mainButton.classList.add('active');
+<<<<<<< HEAD
 		mainButton.textContent = 'Stop';
 		mainButton.dataset.action = 'stop';
 
 		// Save the current mode to storage. This is used to figure out
 		// which mode to set as active when the extension is reopened.
+=======
+		mainButton.textContent = 'Reset';
+		mainButton.dataset.action = 'reset';
+>>>>>>> 064c8bb33fa303e3af2913e3b5e9c0975997c309
 		chrome.storage.local.set({ currentMode: timer.current }).then(() => {
 			console.log('Mode set to ' + timer.current);
 		});
