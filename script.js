@@ -1,3 +1,4 @@
+// Gets the current alarm
 function getAlarm() {
 	return new Promise((resolve, reject) => {
 		chrome.alarms.get(timer.current, (alarm) => {
@@ -73,6 +74,7 @@ function switchMode(mode) {
 	}
 }
 
+// Get the current mode from storage
 async function getMode() {
 	const mode = await chrome.storage.local.get('currentMode');
 	if (mode) {
@@ -80,12 +82,15 @@ async function getMode() {
 	}
 }
 
+// Initializes non-clock elements if there is an active alarm
 async function initializeAlarmValues() {
 	try {
+		// Get the current mode
 		await getMode();
 		const alarm = await getAlarm();
+
+		// Alarm exists: set elements and mode
 		if (alarm) {
-			console.log('alarm');
 			mainButton.classList.add('active');
 			mainButton.textContent = 'Stop';
 			mainButton.dataset.action = 'stop';
@@ -93,6 +98,7 @@ async function initializeAlarmValues() {
 			currentMode = alarm.name;
 			switchMode(currentMode);
 		} else {
+			// No alarm found
 			switchMode('pomodoro');
 		}
 	} catch (error) {
@@ -102,6 +108,7 @@ async function initializeAlarmValues() {
 	}
 }
 
+// Connect elements to popup.html
 const buttonSound = new Audio('./assets/button-sound.mp3');
 const mainButton = document.getElementById('start-btn');
 const pomodoroButton = document.getElementById('pomodoro-btn');
@@ -113,15 +120,17 @@ let timer = {
 	pomodoro: 25,
 	shortBreak: 5,
 	longBreak: 15,
-	// longBreakInterval: 4,
 	current: 'pomodoro'
 };
+// If there is an active alarm, set non-clock elements appropriately
+// Ex: Start button should be 'Stop', and the current mode should be selected
 initializeAlarmValues();
 
 // Call updateHTMLClock every second
 updateHTMLClock();
 setInterval(updateHTMLClock, 1000);
 
+// Start / Stop button
 mainButton.addEventListener('click', async () => {
 	const { action } = mainButton.dataset;
 	buttonSound.play();
@@ -135,9 +144,13 @@ mainButton.addEventListener('click', async () => {
 		chrome.alarms.create(timer.current, {
 			delayInMinutes: timer[timer.current]
 		});
+
 		mainButton.classList.add('active');
 		mainButton.textContent = 'Stop';
 		mainButton.dataset.action = 'stop';
+
+		// Save the current mode to storage. This is used to figure out
+		// which mode to set as active when the extension is reopened.
 		chrome.storage.local.set({ currentMode: timer.current }).then(() => {
 			console.log('Mode set to ' + timer.current);
 		});
@@ -157,4 +170,12 @@ longBreakButton.addEventListener('click', () => {
 shortBreakButton.addEventListener('click', () => {
 	buttonSound.play();
 	switchMode('shortBreak');
+});
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+	if (message.action === 'timerUp') {
+		const breakSound = new Audio('./assets/break.mp3');
+		breakSound.play();
+		switchMode('pomodoro');
+	}
 });
