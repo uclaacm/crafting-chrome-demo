@@ -49,6 +49,8 @@ async function updateHTMLClock() {
 	if (cur) {
 		let { minutes, seconds } = cur;
 		if (minutes !== null && seconds !== null) {
+			minutes = Math.max(0, minutes);
+			seconds = Math.max(0, seconds);
 			minHTML.textContent = `${minutes}`.padStart(2, '0');
 			secHTML.textContent = `${seconds}`.padStart(2, '0');
 		}
@@ -59,7 +61,14 @@ async function updateHTMLClock() {
 }
 
 function switchMode(mode) {
-	timer.current = mode;
+	if (mode !== timer.current) {
+		chrome.alarms.clear(timer.current);
+		mainButton.classList.remove('active');
+		mainButton.textContent = 'Start';
+		mainButton.dataset.action = 'start';
+	}
+
+ 	timer.current = mode;
 
 	pomodoroButton.classList.remove('active');
 	longBreakButton.classList.remove('active');
@@ -117,20 +126,20 @@ const shortBreakButton = document.getElementById('short-break-btn');
 
 // Initialize Values
 let timer = {
-	pomodoro: 25,
+	pomodoro: 25, 
 	shortBreak: 5,
 	longBreak: 15,
 	current: 'pomodoro'
 };
 // If there is an active alarm, set non-clock elements appropriately
-// Ex: Start button should be 'Stop', and the current mode should be selected
+// Ex: Start button should be 'Reset', and the current mode should be selected
 initializeAlarmValues();
 
 // Call updateHTMLClock every second
 updateHTMLClock();
 setInterval(updateHTMLClock, 1000);
 
-// Start / Stop button
+// Start / Reset button
 mainButton.addEventListener('click', async () => {
 	const { action } = mainButton.dataset;
 	buttonSound.play();
@@ -170,9 +179,25 @@ shortBreakButton.addEventListener('click', () => {
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+	mode = timer.current;
+
 	if (message.action === 'timerUp') {
 		const breakSound = new Audio('./assets/break.mp3');
 		breakSound.play();
+
+		if (mode === 'shortBreak' || mode === 'longBreak') {
+			document.querySelector(`[data-sound="break"]`).play();
+		} else {
+			const audioNames = ['great', 'terrific', 'wedidit'];
+			const randomIndex = Math.floor(Math.random() * 3);
+			const randomAudio = audioNames[randomIndex];
+			document.querySelector(`[extra-sound="${randomAudio}"]`).play();
+		}
+
+		mainButton.classList.remove('active');
+		mainButton.textContent = 'Start';
+		mainButton.dataset.action = 'start';
+
 		switchMode('pomodoro');
 	}
 });
